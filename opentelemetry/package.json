@@ -1,0 +1,23 @@
+{
+  "name": "opentelemetry",
+  "version": "1.0.0",
+  "description": "",
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@opentelemetry/core": "^2.0.1",
+    "@opentelemetry/exporter-zipkin": "^2.0.1",
+    "@opentelemetry/node": "^0.24.0",
+    "@opentelemetry/plugin-express": "^0.15.0",
+    "@opentelemetry/plugin-http": "^0.18.2",
+    "@opentelemetry/plugin-https": "^0.18.2",
+    "@opentelemetry/tracing": "^0.24.0",
+    "express": "^5.1.0"
+  }
+}
