@@ -4,10 +4,6 @@ const { diag, DiagConsoleLogger, DiagLogLevel } = require('@opentelemetry/api');
 const { NodeSDK } = require('@opentelemetry/sdk-node');
 const { ZipkinExporter } = require('@opentelemetry/exporter-zipkin');
 const { getNodeAutoInstrumentations } = require('@opentelemetry/auto-instrumentations-node');
-const {
-  PeriodicExportingMetricReader,
-  ConsoleMetricExporter,
-} = require('@opentelemetry/sdk-metrics');
 const { Resource } = require('@opentelemetry/resources');
 const { SemanticResourceAttributes } = require('@opentelemetry/semantic-conventions');
 
@@ -17,14 +13,6 @@ const sdk = new NodeSDK({
   traceExporter: new ZipkinExporter({
     serviceName: 'opentelemetry-demo',
   }),
-  metricReader: new PeriodicExportingMetricReader({
-    exporter: new ConsoleMetricExporter(),
-  }),
-  instrumentations: [getNodeAutoInstrumentations({
-    '@opentelemetry/instrumentation-fs': {
-      enabled: false,
-    },
-  })],
   resource: new Resource({
     [SemanticResourceAttributes.SERVICE_NAME]: 'opentelemetry-demo',
   }),
