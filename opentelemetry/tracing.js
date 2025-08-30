@@ -4,6 +4,10 @@ const { diag, DiagConsoleLogger, DiagLogLevel } = require('@opentelemetry/api');
 const { NodeSDK } = require('@opentelemetry/sdk-node');
 const { ZipkinExporter } = require('@opentelemetry/exporter-zipkin');
 const { getNodeAutoInstrumentations } = require('@opentelemetry/auto-instrumentations-node');
+const {
+  PeriodicExportingMetricReader,
+  ConsoleMetricExporter,
+} = require('@opentelemetry/sdk-metrics');
 
 diag.setLogger(new DiagConsoleLogger(), DiagLogLevel.ERROR);
 
