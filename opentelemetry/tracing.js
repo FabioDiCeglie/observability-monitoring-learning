@@ -11,11 +11,10 @@ const sdk = new NodeSDK({
   traceExporter: new ZipkinExporter({
     serviceName: 'opentelemetry-demo',
   }),
-  instrumentations: [getNodeAutoInstrumentations({
-    '@opentelemetry/instrumentation-fs': {
-      enabled: false,
-    },
-  })],
+  metricReader: new PeriodicExportingMetricReader({
+    exporter: new ConsoleMetricExporter(),
+  }),
+  instrumentations: [getNodeAutoInstrumentations()],
 });
 
 sdk.start();
