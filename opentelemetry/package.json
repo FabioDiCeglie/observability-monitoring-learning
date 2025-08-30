@@ -17,6 +17,7 @@
     "@opentelemetry/exporter-zipkin": "^1.22.0",
     "@opentelemetry/sdk-metrics": "^2.0.1",
     "@opentelemetry/sdk-node": "^0.203.0",
+    "axios": "^1.11.0",
     "express": "^4.19.2"
   }
 }

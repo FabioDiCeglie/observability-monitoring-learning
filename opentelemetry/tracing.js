@@ -4,8 +4,6 @@ const { diag, DiagConsoleLogger, DiagLogLevel } = require('@opentelemetry/api');
 const { NodeSDK } = require('@opentelemetry/sdk-node');
 const { ZipkinExporter } = require('@opentelemetry/exporter-zipkin');
 const { getNodeAutoInstrumentations } = require('@opentelemetry/auto-instrumentations-node');
-const { Resource } = require('@opentelemetry/resources');
-const { SemanticResourceAttributes } = require('@opentelemetry/semantic-conventions');
 
 diag.setLogger(new DiagConsoleLogger(), DiagLogLevel.ERROR);
 
@@ -13,9 +11,11 @@ const sdk = new NodeSDK({
   traceExporter: new ZipkinExporter({
     serviceName: 'opentelemetry-demo',
   }),
-  resource: new Resource({
-    [SemanticResourceAttributes.SERVICE_NAME]: 'opentelemetry-demo',
-  }),
+  instrumentations: [getNodeAutoInstrumentations({
+    '@opentelemetry/instrumentation-fs': {
+      enabled: false,
+    },
+  })],
 });
 
 sdk.start();
