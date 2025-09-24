@@ -1,0 +1,19 @@
+## Configuration for Nginx integration
+
+init_config:
+
+instances:
+  - nginx_status_url: http://nginx/nginx_status
+    
+    # Tags for organizing metrics
+    tags:
+      - env:sandbox
+      - service:nginx
+      - role:reverse-proxy
+    
+    # Collection settings
+    min_collection_interval: 15
+    
+    # Custom headers if needed
+    # headers:
+    #   Authorization: "Bearer <token>"

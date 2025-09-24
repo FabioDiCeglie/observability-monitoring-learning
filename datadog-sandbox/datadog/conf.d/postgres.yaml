@@ -1,0 +1,35 @@
+## Simple PostgreSQL integration configuration
+
+init_config:
+
+instances:
+  - host: postgres
+    port: 5432
+    username: sandbox_user
+    password: sandbox_password
+    dbname: sandbox_db
+    
+    # Basic metrics collection
+    collect_function_metrics: false
+    collect_count_metrics: true
+    collect_activity_metrics: true
+    collect_database_size_metrics: true
+    collect_default_database: true
+    
+    # Simple custom query to monitor our metrics table
+    custom_queries:
+      - metric_prefix: postgresql.simple_metrics
+        query: SELECT COUNT(*) as metric_count FROM simple_metrics;
+        columns:
+          - name: metric_count
+            type: gauge
+        tags:
+          - table:simple_metrics
+    
+    # Collection interval
+    min_collection_interval: 30
+    
+    tags:
+      - env:sandbox
+      - service:postgres
+      - database:sandbox_db
