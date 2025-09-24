@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # Datadog Agent - The heart of monitoring
   datadog-agent:
@@ -11,6 +9,7 @@ services:
       - DD_ENV=${DD_ENV:-sandbox}
       - DD_SERVICE=${DD_SERVICE:-datadog-sandbox}
       - DD_VERSION=${DD_VERSION:-1.0.0}
+      - DD_DOGSTATSD_NON_LOCAL_TRAFFIC=${DD_DOGSTATSD_NON_LOCAL_TRAFFIC:-true}
       
       # Enable APM (Application Performance Monitoring)
       - DD_APM_ENABLED=true
@@ -37,7 +36,6 @@ services:
       - /proc/:/host/proc/:ro
       - /sys/fs/cgroup/:/host/sys/fs/cgroup:ro
       - /etc/passwd:/etc/passwd:ro
-      - /opt/datadog-agent/run:/opt/datadog-agent/run:rw
       
       # Custom configurations
       - ./datadog/conf.d:/etc/datadog-agent/conf.d:ro
@@ -88,7 +86,7 @@ services:
       - DD_SERVICE=flask-api
       - DD_VERSION=${DD_VERSION}
     ports:
-      - "5000:5000"
+      - "5001:5000"
     depends_on:
       - postgres
       - datadog-agent
