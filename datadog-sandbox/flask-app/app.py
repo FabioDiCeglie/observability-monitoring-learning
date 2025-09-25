@@ -213,8 +213,6 @@ def system_metrics():
         # Send metrics to Datadog
         statsd.gauge('flask_app.system.cpu_percent', cpu_percent, tags=['container:flask-api'])
         statsd.gauge('flask_app.system.memory_percent', memory.percent, tags=['container:flask-api'])
-        statsd.gauge('flask_app.system.memory_used_mb', memory.used / 1024 / 1024, tags=['container:flask-api'])
-        statsd.gauge('flask_app.system.disk_percent', disk.percent, tags=['container:flask-api'])
         
         metrics_data = {
             'cpu': {
