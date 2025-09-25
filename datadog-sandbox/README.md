@@ -31,7 +31,6 @@ A simple local environment for learning Datadog monitoring with Docker Compose.
 - **PostgreSQL** database
 - **Nginx** reverse proxy
 - **Datadog Agent** for monitoring
-- **Redis** for caching
 
 ## API Endpoints
 
