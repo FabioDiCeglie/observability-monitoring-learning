@@ -36,6 +36,7 @@ services:
       - /proc/:/host/proc/:ro
       - /sys/fs/cgroup/:/host/sys/fs/cgroup:ro
       - /etc/passwd:/etc/passwd:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
       
       # Custom configurations
       - ./datadog/conf.d:/etc/datadog-agent/conf.d:ro
