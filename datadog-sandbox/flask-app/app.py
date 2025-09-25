@@ -1,6 +1,7 @@
 import os
 import time
 import random
+import psutil
 from datetime import datetime
 from flask import Flask, request, jsonify
 import logging
@@ -188,6 +189,57 @@ def load_test():
         'result': result,
         'timestamp': datetime.utcnow().isoformat()
     })
+
+@app.route('/api/system-metrics', methods=['GET'])
+def system_metrics():
+    """Get system metrics from inside the container
+    
+    NOTE: This endpoint is specifically needed for Docker Desktop environments
+    where the Datadog agent cannot directly access host-level container metrics
+    due to the Linux VM layer. We use psutil to get metrics from within the 
+    container and send them directly to Datadog as custom metrics.
+    """
+    try:
+        # Get CPU usage
+        cpu_percent = psutil.cpu_percent(interval=1)
+        cpu_count = psutil.cpu_count()
+        
+        # Get memory usage
+        memory = psutil.virtual_memory()
+        
+        # Get disk usage
+        disk = psutil.disk_usage('/')
+        
+        # Send metrics to Datadog
+        statsd.gauge('flask_app.system.cpu_percent', cpu_percent, tags=['container:flask-api'])
+        statsd.gauge('flask_app.system.memory_percent', memory.percent, tags=['container:flask-api'])
+        statsd.gauge('flask_app.system.memory_used_mb', memory.used / 1024 / 1024, tags=['container:flask-api'])
+        statsd.gauge('flask_app.system.disk_percent', disk.percent, tags=['container:flask-api'])
+        
+        metrics_data = {
+            'cpu': {
+                'percent': cpu_percent,
+                'count': cpu_count
+            },
+            'memory': {
+                'percent': memory.percent,
+                'used_mb': round(memory.used / 1024 / 1024, 2),
+                'available_mb': round(memory.available / 1024 / 1024, 2),
+                'total_mb': round(memory.total / 1024 / 1024, 2)
+            },
+            'disk': {
+                'percent': disk.percent,
+                'used_gb': round(disk.used / 1024 / 1024 / 1024, 2),
+                'free_gb': round(disk.free / 1024 / 1024 / 1024, 2)
+            },
+            'timestamp': datetime.utcnow().isoformat()
+        }
+        
+        return jsonify(metrics_data)
+        
+    except Exception as e:
+        logger.error(f"Error getting system metrics: {e}")
+        return jsonify({'error': 'Failed to get system metrics'}), 500
 
 # Error Handlers
 @app.errorhandler(404)
