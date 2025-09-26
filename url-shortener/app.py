@@ -18,6 +18,32 @@ logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
+# Middleware for automatic request logging and metrics
+@app.before_request
+def before_request():
+    request.start_time = time.time()
+    
+    # Track request count by endpoint and method
+    statsd.increment('url_shortener.requests.count', 
+                    tags=[f'endpoint:{request.endpoint}', f'method:{request.method}'])
+
+@app.after_request
+def after_request(response):
+    # Calculate response time
+    response_time = time.time() - request.start_time
+    
+    # Log request
+    logger.info(f"{request.method} {request.path} - {response.status_code} - {response_time:.3f}s")
+    
+    # Send metrics to DataDog
+    statsd.histogram('url_shortener.response_time', response_time,
+                    tags=[f'endpoint:{request.endpoint}', f'method:{request.method}', f'status:{response.status_code}'])
+    
+    statsd.increment('url_shortener.responses.count',
+                    tags=[f'endpoint:{request.endpoint}', f'method:{request.method}', f'status:{response.status_code}'])
+    
+    return response
+
 # Simple in-memory storage (will be lost on restart)
 url_store = {}
 DATA_FILE = 'data/urls.json'
@@ -79,8 +105,6 @@ def home():
 
 @app.route('/shorten', methods=['POST'])
 def shorten_url():
-    start_time = time.time()
-    
     try:
         # Handle both form data and JSON
         if request.is_json:
@@ -92,8 +116,8 @@ def shorten_url():
             request_type = "web"
         
         if not url:
-            # Track validation errors
-            statsd.increment('url_shortener.errors', tags=['error_type:validation', 'endpoint:shorten'])
+            # Track validation errors (business-specific metric)
+            statsd.increment('url_shortener.errors', tags=['error_type:validation'])
             logger.warning("URL shortening failed: URL is required")
             return jsonify({'error': 'URL is required'}), 400
         
@@ -105,14 +129,9 @@ def shorten_url():
         url_store[short_code] = url
         save_urls()
         
-        # Track successful URL creation
+        # Track business metrics
         statsd.increment('url_shortener.urls.created', tags=[f'request_type:{request_type}'])
         statsd.gauge('url_shortener.urls.total', len(url_store))
-        
-        # Track response time
-        response_time = time.time() - start_time
-        statsd.histogram('url_shortener.response_time', response_time, 
-                        tags=['endpoint:shorten', f'request_type:{request_type}', 'status:success'])
         
         # Log successful creation
         logger.info(f"URL shortened: {url} -> {short_code} (type: {request_type})")
@@ -140,41 +159,26 @@ def shorten_url():
             '''
             
     except Exception as e:
-        # Track application errors
-        statsd.increment('url_shortener.errors', tags=['error_type:application', 'endpoint:shorten'])
-        response_time = time.time() - start_time
-        statsd.histogram('url_shortener.response_time', response_time, 
-                        tags=['endpoint:shorten', 'status:error'])
+        # Track application errors (business-specific metric)
+        statsd.increment('url_shortener.errors', tags=['error_type:application'])
         logger.error(f"Error shortening URL: {str(e)}")
         return jsonify({'error': 'Internal server error'}), 500
 
 @app.route('/<short_code>')
 def redirect_url(short_code):
-    start_time = time.time()
-    
     url = url_store.get(short_code)
     if url:
-        # Track successful redirect
+        # Track successful redirect (business-specific metric)
         statsd.increment('url_shortener.urls.accessed', tags=['status:success'])
-        
-        # Track response time for successful redirects
-        response_time = time.time() - start_time
-        statsd.histogram('url_shortener.response_time', response_time, 
-                        tags=['endpoint:redirect', 'status:success'])
         
         # Log successful access
         logger.info(f"URL accessed: {short_code} -> {url}")
         
         return redirect(url)
     else:
-        # Track 404 errors (broken/invalid short codes)
+        # Track 404 errors (business-specific metrics)
         statsd.increment('url_shortener.urls.accessed', tags=['status:not_found'])
-        statsd.increment('url_shortener.errors', tags=['error_type:not_found', 'endpoint:redirect'])
-        
-        # Track response time for 404s
-        response_time = time.time() - start_time
-        statsd.histogram('url_shortener.response_time', response_time, 
-                        tags=['endpoint:redirect', 'status:not_found'])
+        statsd.increment('url_shortener.errors', tags=['error_type:not_found'])
         
         # Log 404
         logger.warning(f"URL not found: {short_code}")
@@ -183,21 +187,14 @@ def redirect_url(short_code):
 
 @app.route('/stats')
 def stats():
-    start_time = time.time()
-    
     try:
         total_urls = len(url_store)
         
-        # Update current total URLs gauge
+        # Update current total URLs gauge (business-specific metric)
         statsd.gauge('url_shortener.urls.total', total_urls)
         
-        # Track stats access
+        # Track stats access (business-specific metric)
         statsd.increment('url_shortener.stats.accessed')
-        
-        # Track response time
-        response_time = time.time() - start_time
-        statsd.histogram('url_shortener.response_time', response_time, 
-                        tags=['endpoint:stats', 'status:success'])
         
         # Log stats access
         logger.info(f"Stats accessed: {total_urls} total URLs")
@@ -208,11 +205,8 @@ def stats():
         })
         
     except Exception as e:
-        # Track stats errors
-        statsd.increment('url_shortener.errors', tags=['error_type:application', 'endpoint:stats'])
-        response_time = time.time() - start_time
-        statsd.histogram('url_shortener.response_time', response_time, 
-                        tags=['endpoint:stats', 'status:error'])
+        # Track stats errors (business-specific metric)
+        statsd.increment('url_shortener.errors', tags=['error_type:application'])
         logger.error(f"Error accessing stats: {str(e)}")
         return jsonify({'error': 'Internal server error'}), 500
 
