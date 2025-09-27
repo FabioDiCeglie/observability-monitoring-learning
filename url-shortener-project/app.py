@@ -31,12 +31,13 @@ def before_request():
 def after_request(response):
     # Calculate response time
     response_time = time.time() - request.start_time
+    response_time_ms = response_time * 1000  # Convert to milliseconds for DataDog
     
     # Log request
     logger.info(f"{request.method} {request.path} - {response.status_code} - {response_time:.3f}s")
     
-    # Send metrics to DataDog
-    statsd.histogram('url_shortener.response_time', response_time,
+    # Send metrics to DataDog (in milliseconds)
+    statsd.histogram('url_shortener.response_time', response_time_ms,
                     tags=[f'endpoint:{request.endpoint}', f'method:{request.method}', f'status:{response.status_code}'])
     
     statsd.increment('url_shortener.responses.count',
