@@ -51,7 +51,6 @@
   - **Metric:** Search and select `url_shortener.requests.count`
   - **From:** `*` (all sources)
   - **Aggregation:** `sum`
-  - **Function:** Click "Advanced" → Select `as_rate()`
 - **Display:** Rate per minute
 - **Color:** Blue
 
@@ -59,9 +58,9 @@
 - **Widget Type:** Query Value (Big Number)
 - **Title:** "Avg Response Time"
 - **Metric Selection:**
-  - **Metric:** Search and select `url_shortener.response_time`
+  - **Metric:** Search and select `url_shortener.response_time.avg`
   - **From:** `*` (all sources)
-  - **Aggregation:** `avg`
+  - **Aggregation:** `avg` (or leave default)
 - **Display:** Milliseconds
 - **Conditional Formatting:** Green (< 100ms), Orange (> 500ms)
 
@@ -70,8 +69,8 @@
 - **Title:** "Error Rate %"
 - **Metric Selection (Formula):**
   - Click **"Advanced"** → **"Formula"**
-  - **Query A:** `sum:url_shortener.errors{*}`
-  - **Query B:** `sum:url_shortener.responses.count{*}`
+  - **Query A:** `url_shortener.errors` -> `count` -> `sum`
+  - **Query B:** `url_shortener.responses` -> `count` -> `sum`
   - **Formula:** `(a / b) * 100`
 - **Display:** Percentage
 - **Conditional Formatting:** Red (if > 1%)
@@ -86,7 +85,6 @@
   - **From:** `*` (all sources)
   - **Aggregation:** `sum`
   - **Function:** Click "Advanced" → Select `as_count()`
-  - **Group by:** Select `request_type` in the "Group by" field
 - **Display:** Line chart
 
 #### **Widget 5: URL Accesses**
@@ -97,13 +95,11 @@
     - **Metric:** `url_shortener.urls.accessed`
     - **From:** `status:success`
     - **Aggregation:** `sum`
-    - **Function:** `as_count()`
     - **Color:** Green
   - **Query B (404s):**
     - **Metric:** `url_shortener.urls.accessed`
     - **From:** `status:not_found`
     - **Aggregation:** `sum`
-    - **Function:** `as_count()`
     - **Color:** Red
 - **Display:** Line chart
 
@@ -122,7 +118,7 @@
 - **Widget Type:** Timeseries
 - **Title:** "Response Time by Endpoint"
 - **Metric Selection:**
-  - **Metric:** Search and select `url_shortener.response_time`
+  - **Metric:** Search and select `url_shortener.response_time.avg`
   - **From:** `*` (all sources)
   - **Aggregation:** `avg`
   - **Group by:** Select `endpoint` in the "Group by" field
