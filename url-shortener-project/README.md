@@ -7,6 +7,23 @@ A simple, production-ready URL shortener service built with Flask and comprehens
 ![Docker](https://img.shields.io/badge/docker-ready-blue.svg)
 ![DataDog](https://img.shields.io/badge/monitoring-DataDog-purple.svg)
 
+## 📊 Dashboard
+
+The URL shortener comes with comprehensive DataDog monitoring dashboards that provide real-time insights into your application's performance and business metrics.
+
+### Production Overview Dashboard
+![Production Dashboard Overview](./public/dashboard1.png)
+![Detailed Metrics Dashboard](./public/dashboard2.png)
+
+**Key Metrics Tracked:**
+- Request rates and response times
+- URL creation and access patterns
+- Error rates and HTTP status distributions
+- Business KPIs and performance indicators
+
+📖 **Setup Guide:** Follow the detailed [Dashboard Setup Guide](./DASHBOARD_GUIDE.md) to create these dashboards in your DataDog account.
+
+
 ## ✨ Features
 
 - **URL Shortening**: Convert long URLs into short, shareable links
