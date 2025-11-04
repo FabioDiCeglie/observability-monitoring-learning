@@ -1,0 +1,129 @@
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: image-processor-db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-imageprocessor}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-imageprocessor123}
+      POSTGRES_DB: ${POSTGRES_DB:-image_processing}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U imageprocessor"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - image-network
+
+  # Google Pub/Sub Emulator
+  pubsub-emulator:
+    image: gcr.io/google.com/cloudsdktool/google-cloud-cli:latest
+    container_name: pubsub-emulator
+    command: gcloud beta emulators pubsub start --host-port=0.0.0.0:8085 --project=${PUBSUB_PROJECT_ID:-image-thumbnail-project}
+    ports:
+      - "8085:8085"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8085"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - image-network
+
+  # API Service (FastAPI)
+  api:
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+    container_name: image-api
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-imageprocessor}:${POSTGRES_PASSWORD:-imageprocessor123}@postgres:5432/${POSTGRES_DB:-image_processing}
+      - PUBSUB_PROJECT_ID=${PUBSUB_PROJECT_ID:-image-thumbnail-project}
+      - PUBSUB_EMULATOR_HOST=pubsub-emulator:8085
+      - PUBSUB_TOPIC=${PUBSUB_TOPIC:-image-processing-tasks}
+      - UPLOAD_DIR=/app/storage/uploads
+      - THUMBNAIL_DIR=/app/storage/thumbnails
+      - DD_AGENT_HOST=${DD_AGENT_HOST:-datadog-agent}
+      - DD_TRACE_ENABLED=${DD_TRACE_ENABLED:-false}
+      - DD_ENV=${DD_ENV:-development}
+      - DD_SERVICE=${DD_SERVICE_API:-image-api}
+    ports:
+      - "${API_PORT:-8000}:8000"
+    volumes:
+      - ./storage/uploads:/app/storage/uploads
+      - ./storage/thumbnails:/app/storage/thumbnails
+    depends_on:
+      postgres:
+        condition: service_healthy
+      pubsub-emulator:
+        condition: service_healthy
+    networks:
+      - image-network
+    restart: unless-stopped
+
+  # Worker Service
+  worker:
+    build:
+      context: .
+      dockerfile: worker/Dockerfile
+    container_name: image-worker
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-imageprocessor}:${POSTGRES_PASSWORD:-imageprocessor123}@postgres:5432/${POSTGRES_DB:-image_processing}
+      - PUBSUB_PROJECT_ID=${PUBSUB_PROJECT_ID:-image-thumbnail-project}
+      - PUBSUB_EMULATOR_HOST=pubsub-emulator:8085
+      - PUBSUB_TOPIC=${PUBSUB_TOPIC:-image-processing-tasks}
+      - UPLOAD_DIR=/app/storage/uploads
+      - THUMBNAIL_DIR=/app/storage/thumbnails
+      - WORKER_SLEEP_SECONDS=${WORKER_SLEEP_SECONDS:-0.1}
+      - DD_AGENT_HOST=${DD_AGENT_HOST:-datadog-agent}
+      - DD_TRACE_ENABLED=${DD_TRACE_ENABLED:-false}
+      - DD_ENV=${DD_ENV:-development}
+      - DD_SERVICE=${DD_SERVICE_WORKER:-image-worker}
+    volumes:
+      - ./storage/uploads:/app/storage/uploads
+      - ./storage/thumbnails:/app/storage/thumbnails
+    depends_on:
+      postgres:
+        condition: service_healthy
+      pubsub-emulator:
+        condition: service_healthy
+    networks:
+      - image-network
+    restart: unless-stopped
+    deploy:
+      replicas: 2  # Run 2 worker instances for parallel processing
+
+  # Datadog Agent (Optional - uncomment when ready to use)
+  # datadog-agent:
+  #   image: gcr.io/datadoghq/agent:latest
+  #   container_name: datadog-agent
+  #   environment:
+  #     - DD_API_KEY=${DD_API_KEY}
+  #     - DD_SITE=datadoghq.com
+  #     - DD_APM_ENABLED=true
+  #     - DD_APM_NON_LOCAL_TRAFFIC=true
+  #     - DD_LOGS_ENABLED=true
+  #     - DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL=true
+  #     - DD_PROCESS_AGENT_ENABLED=true
+  #     - DD_ENV=${DD_ENV:-development}
+  #   ports:
+  #     - "8126:8126"  # APM traces
+  #   volumes:
+  #     - /var/run/docker.sock:/var/run/docker.sock:ro
+  #     - /proc/:/host/proc/:ro
+  #     - /sys/fs/cgroup/:/host/sys/fs/cgroup:ro
+  #   networks:
+  #     - image-network
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  image-network:
+    driver: bridge
+
