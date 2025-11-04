@@ -60,7 +60,6 @@ class Thumbnail(Base):
         return f"<Thumbnail(id={self.id}, image_id={self.image_id}, size={self.size_name})>"
 
 
-# Database engine and session factory
 engine = None
 SessionLocal = None
 
@@ -71,14 +70,13 @@ def init_db():
     
     engine = create_engine(
         Config.DATABASE_URL,
-        pool_pre_ping=True,  # Verify connections before using
+        pool_pre_ping=True,
         pool_size=5,
         max_overflow=10
     )
     
     SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
     
-    # Create all tables
     Base.metadata.create_all(bind=engine)
     print("✅ Database initialized successfully")
 
