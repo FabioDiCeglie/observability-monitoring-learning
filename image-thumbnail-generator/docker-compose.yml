@@ -66,36 +66,36 @@ services:
     restart: unless-stopped
 
   # Worker Service
-  worker:
-    build:
-      context: .
-      dockerfile: worker/Dockerfile
-    container_name: image-worker
-    environment:
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-imageprocessor}:${POSTGRES_PASSWORD:-imageprocessor123}@postgres:5432/${POSTGRES_DB:-image_processing}
-      - PUBSUB_PROJECT_ID=${PUBSUB_PROJECT_ID:-image-thumbnail-project}
-      - PUBSUB_EMULATOR_HOST=pubsub-emulator:8085
-      - PUBSUB_TOPIC=${PUBSUB_TOPIC:-image-processing-tasks}
-      - UPLOAD_DIR=/app/storage/uploads
-      - THUMBNAIL_DIR=/app/storage/thumbnails
-      - WORKER_SLEEP_SECONDS=${WORKER_SLEEP_SECONDS:-0.1}
-      - DD_AGENT_HOST=${DD_AGENT_HOST:-datadog-agent}
-      - DD_TRACE_ENABLED=${DD_TRACE_ENABLED:-false}
-      - DD_ENV=${DD_ENV:-development}
-      - DD_SERVICE=${DD_SERVICE_WORKER:-image-worker}
-    volumes:
-      - ./storage/uploads:/app/storage/uploads
-      - ./storage/thumbnails:/app/storage/thumbnails
-    depends_on:
-      postgres:
-        condition: service_healthy
-      pubsub-emulator:
-        condition: service_healthy
-    networks:
-      - image-network
-    restart: unless-stopped
-    deploy:
-      replicas: 2  # Run 2 worker instances for parallel processing
+  # worker:
+  #   build:
+  #     context: .
+  #     dockerfile: worker/Dockerfile
+  #   container_name: image-worker
+  #   environment:
+  #     - DATABASE_URL=postgresql://${POSTGRES_USER:-imageprocessor}:${POSTGRES_PASSWORD:-imageprocessor123}@postgres:5432/${POSTGRES_DB:-image_processing}
+  #     - PUBSUB_PROJECT_ID=${PUBSUB_PROJECT_ID:-image-thumbnail-project}
+  #     - PUBSUB_EMULATOR_HOST=pubsub-emulator:8085
+  #     - PUBSUB_TOPIC=${PUBSUB_TOPIC:-image-processing-tasks}
+  #     - UPLOAD_DIR=/app/storage/uploads
+  #     - THUMBNAIL_DIR=/app/storage/thumbnails
+  #     - WORKER_SLEEP_SECONDS=${WORKER_SLEEP_SECONDS:-0.1}
+  #     - DD_AGENT_HOST=${DD_AGENT_HOST:-datadog-agent}
+  #     - DD_TRACE_ENABLED=${DD_TRACE_ENABLED:-false}
+  #     - DD_ENV=${DD_ENV:-development}
+  #     - DD_SERVICE=${DD_SERVICE_WORKER:-image-worker}
+  #   volumes:
+  #     - ./storage/uploads:/app/storage/uploads
+  #     - ./storage/thumbnails:/app/storage/thumbnails
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #     pubsub-emulator:
+  #       condition: service_healthy
+  #   networks:
+  #     - image-network
+  #   restart: unless-stopped
+  #   deploy:
+  #     replicas: 2  # Run 2 worker instances for parallel processing
 
   # Datadog Agent (Optional - uncomment when ready to use)
   # datadog-agent:
