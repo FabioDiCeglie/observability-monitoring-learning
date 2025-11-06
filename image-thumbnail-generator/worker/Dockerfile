@@ -8,12 +8,12 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-COPY worker/requirements.txt /app/worker/requirements.txt
-RUN pip install --no-cache-dir -r worker/requirements.txt
+COPY worker/requirements.txt /app/requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 COPY shared/ /app/shared/
 COPY worker/ /app/worker/
 
 RUN mkdir -p /app/storage/uploads /app/storage/thumbnails/{small,medium,large}
 
-CMD ["python", "-u", "worker/worker.py"]
+CMD ["python", "-u", "-m", "worker.worker"]
