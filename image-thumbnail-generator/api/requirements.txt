@@ -21,6 +21,7 @@ pydantic-settings==2.1.0
 
 # Monitoring (Datadog)
 ddtrace==2.3.0
+datadog==0.48.0
 
 # Testing
 pytest==7.4.3

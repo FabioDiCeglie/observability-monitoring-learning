@@ -4,7 +4,10 @@ from datetime import datetime
 from shared.database import init_db, get_db, Image, Thumbnail, ImageStatus
 from shared.pubsub_client import get_pubsub_client
 from shared.config import Config
+from shared.metrics import init_metrics, increment_counter, record_histogram, record_timing
 from worker.processors.image_processor import generate_thumbnails
+
+init_metrics()
 
 
 def process_image_message(message_data: dict, db):
@@ -13,10 +16,12 @@ def process_image_message(message_data: dict, db):
     file_path = message_data.get("file_path")
     
     print(f"🔄 Processing image: {image_id}")
+    start_time = time.time()
     
     image = db.query(Image).filter(Image.id == image_id).first()
     if not image:
         print(f"❌ Image not found in database: {image_id}")
+        increment_counter("worker.process.count", tags=["status:error", "reason:not_found"])
         return False
     
     image.status = ImageStatus.PROCESSING
@@ -36,10 +41,17 @@ def process_image_message(message_data: dict, db):
                 processing_time_ms=proc_time_ms
             )
             db.add(thumbnail)
+            
+            record_timing(f"thumbnail.generation.time", proc_time_ms, tags=[f"size:{size_name}"])
+            record_histogram(f"thumbnail.size_bytes", file_size, tags=[f"size:{size_name}"])
         
         image.status = ImageStatus.COMPLETED
         image.processed_at = datetime.utcnow()
         db.commit()
+        
+        total_time_ms = (time.time() - start_time) * 1000
+        record_timing("worker.process.total_time", total_time_ms)
+        increment_counter("worker.process.count", tags=["status:success"])
         
         print(f"✅ Completed processing: {image_id}")
         return True
@@ -49,6 +61,7 @@ def process_image_message(message_data: dict, db):
         image.status = ImageStatus.FAILED
         image.error_message = str(e)
         db.commit()
+        increment_counter("worker.process.count", tags=["status:error", "reason:processing_failed"])
         return False
 
 

@@ -10,6 +10,9 @@ from api.models.schemas import ImageUploadResponse
 from api.storage.file_handler import save_uploaded_file, file_exists
 from shared.database import get_db, Image, Thumbnail, ImageStatus
 from shared.pubsub_client import get_pubsub_client
+from shared.metrics import init_metrics, increment_counter, record_histogram
+
+init_metrics()
 
 router = APIRouter(prefix="/api/images", tags=["images"])
 
@@ -30,6 +33,9 @@ async def upload_image(
     try:
         file_id, file_path, file_size = await save_uploaded_file(file)
         
+        increment_counter("image.upload.count", tags=["status:success"])
+        record_histogram("image.upload.size_bytes", file_size)
+        
         image = Image(
             id=file_id,
             original_filename=file.filename or "unknown",
@@ -41,7 +47,6 @@ async def upload_image(
         db.add(image)
         db.commit()
         
-        # Publish message to Pub/Sub for processing
         pubsub_client = get_pubsub_client()
         message = {
             "image_id": file_id,
@@ -62,9 +67,11 @@ async def upload_image(
         )
         
     except HTTPException:
+        increment_counter("image.upload.count", tags=["status:error"])
         raise
     except Exception as e:
         db.rollback()
+        increment_counter("image.upload.count", tags=["status:error"])
         print(f"❌ Error uploading image: {e}")
         raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
 
@@ -81,6 +88,7 @@ def download_thumbnail(
     Size options: small, medium, large
     """
     if size not in ["small", "medium", "large"]:
+        increment_counter("thumbnail.download.count", tags=["status:error", "reason:invalid_size"])
         raise HTTPException(
             status_code=400, 
             detail="Invalid size. Must be: small, medium, or large"
@@ -92,16 +100,20 @@ def download_thumbnail(
     ).first()
     
     if not thumbnail:
+        increment_counter("thumbnail.download.count", tags=["status:error", "reason:not_found", f"size:{size}"])
         raise HTTPException(
             status_code=404,
             detail=f"Thumbnail '{size}' not found for image. It may still be processing."
         )
     
     if not file_exists(thumbnail.file_path):
+        increment_counter("thumbnail.download.count", tags=["status:error", "reason:file_missing", f"size:{size}"])
         raise HTTPException(
             status_code=404, 
             detail="Thumbnail file not found on disk"
         )
+    
+    increment_counter("thumbnail.download.count", tags=["status:success", f"size:{size}"])
     
     return FileResponse(
         thumbnail.file_path,
