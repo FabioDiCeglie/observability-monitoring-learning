@@ -19,4 +19,4 @@ RUN mkdir -p /app/storage/uploads /app/storage/thumbnails/{small,medium,large}
 
 EXPOSE 8000
 
-CMD ["uvicorn", "api.app:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["ddtrace-run", "uvicorn", "api.app:app", "--host", "0.0.0.0", "--port", "8000"]

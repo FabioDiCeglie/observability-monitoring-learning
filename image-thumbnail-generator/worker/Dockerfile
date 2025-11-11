@@ -16,4 +16,4 @@ COPY worker/ /app/worker/
 
 RUN mkdir -p /app/storage/uploads /app/storage/thumbnails/{small,medium,large}
 
-CMD ["python", "-u", "-m", "worker.worker"]
+CMD ["ddtrace-run", "python", "-u", "-m", "worker.worker"]
