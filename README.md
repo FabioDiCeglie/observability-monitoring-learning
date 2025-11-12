@@ -8,41 +8,65 @@ This repository is designed as a learning resource for me to understand and impl
 
 ## 🚀 Projects
 
-### 1. 🐕 [DataDog Sandbox](./datadog-sandbox-project/)
+### 1. 🖼️ [Image Thumbnail Generator](./image-thumbnail-generator/)
+**A distributed image processing system with complete DataDog observability**
+
+Upload images through a REST API and automatically generate thumbnails in multiple sizes using asynchronous message-driven processing. This project demonstrates how to build, monitor, and trace a real-world microservices architecture where an API service handles uploads, publishes messages to a queue, and worker services process images independently.
+
+- **Technology Stack**: FastAPI, Python Worker, PostgreSQL, Google Pub/Sub, DataDog APM
+- **Learning Focus**: Distributed tracing, async processing, microservices monitoring, custom metrics
+- **Key Features**:
+  - Asynchronous message-driven architecture with Pub/Sub
+  - Multi-size thumbnail generation (150px, 400px, 800px)
+  - End-to-end distributed tracing across API and worker services
+  - Custom business metrics (processing time, success rates, image sizes)
+  - Scalable worker pool design for high throughput
+  - Complete APM integration with trace correlation
+  - Real-world production patterns with health checks and error handling
+
+### 2. 🐕 [DataDog Sandbox](./datadog-sandbox-project/)
 **A complete DataDog monitoring environment with Docker Compose**
 
-- **Technology Stack**: Flask, PostgreSQL, Nginx, DataDog Agent
-- **Learning Focus**: Basic monitoring setup, custom metrics, dashboards
-- **Key Features**:
-  - Multi-container application monitoring
-  - Database performance tracking
-  - Custom business metrics
-  - Load testing endpoints
-  - System metrics collection
+A beginner-friendly playground for learning DataDog fundamentals. Spin up a full-stack application with Flask API, PostgreSQL database, and Nginx proxy, then explore monitoring with pre-built endpoints that simulate real-world scenarios like slow responses, errors, and high CPU load. Perfect for getting your hands dirty with metrics, dashboards, and alerts.
 
-### 2. 🔗 [URL Shortener with DataDog](./url-shortener-project/)
+- **Technology Stack**: Flask, PostgreSQL, Nginx, DataDog Agent
+- **Learning Focus**: Basic monitoring setup, custom metrics, dashboards, agent configuration
+- **Key Features**:
+  - Multi-container application monitoring out of the box
+  - Database connection and performance tracking
+  - Built-in endpoints for testing (health, slow response, errors, load)
+  - System metrics collection (CPU, memory, disk)
+  - Ready-to-use monitoring setup for experimentation
+
+### 3. 🔗 [URL Shortener with DataDog](./url-shortener-project/)
 **Production-ready URL shortener with comprehensive monitoring**
 
-- **Technology Stack**: Flask, DataDog, Docker
-- **Learning Focus**: Business metrics, performance monitoring, production observability
-- **Key Features**:
-  - Real-world application monitoring
-  - Business KPI tracking
-  - Error rate monitoring
-  - Response time analysis
-  - Custom dashboards
+Build and monitor a fully functional URL shortener service that converts long URLs into short, shareable links. This project demonstrates how to track both business metrics (URLs created, redirect success rates) and technical metrics (response times, error rates) in a production-ready application. Includes custom DataDog dashboards and a complete REST API alongside a web interface.
 
-### 3. 🔍 [OpenTelemetry Tracing](./opentelemetry/)
+- **Technology Stack**: Flask, DataDog, Docker
+- **Learning Focus**: Business metrics, performance monitoring, production observability, KPI tracking
+- **Key Features**:
+  - Full-featured URL shortening with web UI and REST API
+  - Business KPI tracking (creation rates, access patterns, total URLs)
+  - Performance monitoring (response times, request rates)
+  - Error tracking and validation monitoring
+  - Custom DataDog dashboards with detailed setup guide
+  - File-based persistent storage
+
+### 4. 🔍 [OpenTelemetry Tracing](./opentelemetry/)
 **Distributed tracing with OpenTelemetry and multiple exporters**
 
+Explore the vendor-neutral OpenTelemetry standard with a multi-tier Node.js application that demonstrates distributed tracing. Watch requests flow through multiple service tiers (frontend → middle-tier → backend) and visualize the complete trace in Zipkin while exporting metrics to Prometheus. Learn how auto-instrumentation captures HTTP calls, database queries, and custom spans without manual code changes.
+
 - **Technology Stack**: Node.js, Express, OpenTelemetry, Prometheus, Zipkin
-- **Learning Focus**: Distributed tracing, OpenTelemetry instrumentation, trace analysis
+- **Learning Focus**: Distributed tracing, OpenTelemetry instrumentation, trace analysis, vendor-neutral observability
 - **Key Features**:
-  - Auto-instrumentation setup
-  - Multi-tier application tracing
-  - Prometheus metrics export
-  - Zipkin trace visualization
-  - Request flow analysis
+  - Auto-instrumentation for Express and HTTP clients
+  - Multi-tier application architecture (3 levels of service calls)
+  - Prometheus metrics exporter for time-series data
+  - Zipkin integration for visual trace analysis
+  - Request flow visualization across service boundaries
+  - Zero-code instrumentation setup
 
 ## 🛠️ Prerequisites
 
